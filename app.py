@@ -7,6 +7,7 @@ from models import setup_db, db, Doctor, Patient, Appointment
 
 def create_app(test_config=None):
     app = Flask(__name__)
+    app.config['DEBUG'] = True
 
     if test_config is None:
         setup_db(app)
@@ -33,14 +34,52 @@ def create_app(test_config=None):
 
         return response
 
-    @app.route('/')
-    def starting():
+
+    # ======================================
+    #  ROUTES
+    # ======================================
+
+    # 1. DOCTOR
+    # ======================================
+    @app.route('/doctors', methods=['GET'])
+    def get_doctors():
+        selection = Doctor.query.all()
+        doctors = [doctor.format() for doctor in selection]
         return jsonify({
-            'message': 'lets start this fucking project!' 
+            'success': True,
+            'doctors': doctors
         })
+    
+    @app.route('/doctors', methods=['POST'])
+    def create_doctor():
+        body = request.get_json()
+        name = body.get('name', None)
+        speciality = body.get('speciality', None)
+        phone = body.get('phone', None)
+        email = body.get('email', None)
+
+        if not name or not speciality:
+            abort(400)
+
+        try:
+            new_doctor = Doctor(
+                name=name,
+                speciality=speciality,
+                phone=phone,
+                email=email
+            )
+            new_doctor.insert()
+            return jsonify({
+                'success': True,
+                'doctor': new_doctor.format()
+            })
+        except:
+            db.session.rollback()
+            abort(422)
+    
+
 
     return app
-
 
 app = create_app()
 if __name__ == '__main__':

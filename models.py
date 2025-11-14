@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 database_name = 'doctors_crm'
 database_user = 'postgres'
-database_password = ''          # CREATE ENV VARIABLE
+database_password = 'Dev26776'          # CREATE ENV VARIABLE
 database_host = 'localhost:5432'
 database_path = f'postgresql://{database_user}:{database_password}@{database_host}/{database_name}'
 
@@ -29,16 +29,16 @@ class Doctor(db.Model):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
-    specialty = Column(String, nullable=False)
+    speciality = Column(String, nullable=False)
     phone = Column(String)
     email = Column(String)
 
     # Relationship with appointments
     appointments = relationship('Appointment', backref='doctor', lazy=True)
 
-    def __init__(self, name, specialty, phone=None, email=None):
+    def __init__(self, name, speciality, phone=None, email=None):
         self.name = name
-        self.specialty = specialty
+        self.speciality = speciality
         self.phone = phone
         self.email = email
 
@@ -57,7 +57,7 @@ class Doctor(db.Model):
         return {
             'id': self.id,
             'name': self.name,
-            'specialty': self.specialty,
+            'speciality': self.speciality,
             'phone': self.phone,
             'email': self.email
         }
@@ -123,6 +123,17 @@ class Appointment(db.Model):
         self.patient_id = patient_id
         self.status = status
         self.notes = notes
+
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
 
     def format(self):
         return {
