@@ -77,6 +77,53 @@ def create_app(test_config=None):
             db.session.rollback()
             abort(422)
     
+    @app.route('/doctors/<int:doctor_id>', methods=['PATCH'])
+    def update_doctor(doctor_id):
+        doctor = Doctor.query.get(doctor_id)
+        if not doctor:
+            abort(404)
+
+        body = request.get_json()
+        name = body.get('name', None)
+        speciality = body.get('speciality', None)
+        phone = body.get('phone', None)
+        email = body.get('email', None)
+
+        if name:
+            doctor.name = name
+        if speciality:
+            doctor.speciality = speciality
+        if phone:
+            doctor.phone = phone
+        if email:
+            doctor.email = email
+
+        try:
+            doctor.update()
+            return jsonify({
+                'success': True,
+                'doctor': doctor.format()
+            })
+        except:
+            db.session.rollback()
+            abort(422)
+
+    @app.route('/doctors/<int:doctor_id>', methods=['DELETE'])
+    def delete_doctor(doctor_id):
+        doctor = Doctor.query.get(doctor_id)
+        if not doctor:
+            abort(404)
+
+        try:
+            doctor.delete()
+            return jsonify({
+                'success': True,
+                'deleted': doctor_id
+            })
+        except:
+            db.session.rollback()
+            abort(422)
+
 
 
     return app
