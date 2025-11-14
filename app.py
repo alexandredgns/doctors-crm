@@ -125,6 +125,91 @@ def create_app(test_config=None):
             abort(422)
 
 
+    # 2. PATIENT
+    # ======================================
+    @app.route('/patients', methods=['GET'])
+    def get_patients():
+        selection = Patient.query.all()
+        patients = [patient.format() for patient in selection]
+        return jsonify({
+            'success': True,
+            'patients': patients
+        })
+    
+    @app.route('/patients', methods=['POST'])
+    def create_patient():
+        body = request.get_json()
+        name = body.get('name', None)
+        phone = body.get('phone', None)
+        address = body.get('address', None)
+        medical_history = body.get('medical_history', None)
+
+        if not name:
+            abort(404)
+
+        try:
+            new_patient = Patient(
+                name=name,
+                phone=phone,
+                address=address,
+                medical_history=medical_history
+            )
+            new_patient.insert()
+            return jsonify({
+                'success': True,
+                'patient': new_patient.format()
+            })
+        except:
+            db.session.rollback()
+            abort(422)
+
+    @app.route('/patients/<int:patient_id>', methods=['PATCH'])
+    def update_patient(patient_id):
+        patient = Patient.query.get(patient_id)
+        if not patient:
+            abort(404)
+
+        body = request.get_json()
+        name = body.get('name', None)
+        phone = body.get('phone', None)
+        address = body.get('address', None)
+        medical_history = body.get('medical_history', None)
+
+        if name:
+            patient.name = name
+        if phone:
+            patient.phone = phone
+        if address:
+            patient.address = address
+        if medical_history:
+            patient.medical_history = medical_history
+
+        try:
+            patient.update()
+            return jsonify({
+                'success': True,
+                'patient': patient.format()
+            })
+        except:
+            db.session.rollback()
+            abort(422)
+
+    @app.route('/patients/<int:patient_id>', methods=['DELETE'])
+    def delete_patient(patient_id):
+        patient = Patient.query.get(patient_id)
+        if not patient:
+            abort(404)
+
+        try:
+            patient.delete()
+            return jsonify({
+                'success': True,
+                'patient': patient_id
+            })
+        except:
+            db.session.rollback()
+            abort(422)
+
 
     return app
 
