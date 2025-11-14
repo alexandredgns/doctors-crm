@@ -1,5 +1,6 @@
 from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
+from flask_migrate import Migrate
 
 from models import setup_db, db, Doctor, Patient, Appointment
 
@@ -13,10 +14,11 @@ def create_app(test_config=None):
         database_path = test_config.get('SQLALCHEMY_DATABASE_URI')
         setup_db(app, database_path=database_path)
 
-    cors = CORS(app, resources={r"/*": {"origins": "*"}})
-
+    migrate = Migrate(app, db)
     with app.app_context():
         db.create_all()
+
+    cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
     @app.after_request
     def after_request(response):
