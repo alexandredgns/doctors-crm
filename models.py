@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, String, Integer, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 
 database_name = 'doctors_crm'
 database_user = 'postgres'
@@ -42,6 +42,17 @@ class Doctor(db.Model):
         self.phone = phone
         self.email = email
 
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
     def format(self):
         return {
             'id': self.id,
@@ -72,6 +83,17 @@ class Patient(db.Model):
         self.address = address
         self.medical_history = medical_history
 
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
     def format(self):
         return {
             'id': self.id,
@@ -88,8 +110,8 @@ class Appointment(db.Model):
     __tablename__ = 'appointments'
 
     id = Column(Integer, primary_key=True)
-    date = Column(DateTime, nullable=False, default=datetime.utcnow)
-    status = Column(String, nullable=False, default='Scheduled')  # e.g., Scheduled, Confirmed, Canceled, Completed
+    date = Column(DateTime, nullable=False, default=datetime.now(timezone.utc))
+    status = Column(String, nullable=False, default='Scheduled')  # e.g., Scheduled, Canceled, Completed, Reschedule
     notes = Column(String)
 
     doctor_id = Column(Integer, ForeignKey('doctors.id'), nullable=False)
