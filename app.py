@@ -1,8 +1,8 @@
 from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
 from flask_migrate import Migrate
-
 from models import setup_db, db, Doctor, Patient, Appointment
+from datetime import datetime, timezone
 
 
 def create_app(test_config=None):
@@ -205,6 +205,129 @@ def create_app(test_config=None):
             return jsonify({
                 'success': True,
                 'patient': patient_id
+            })
+        except:
+            db.session.rollback()
+            abort(422)
+
+
+    # 3. APPOINTMENTS
+    # ======================================
+
+    #  GET /appointments
+    #  Description: Retrieves all APPOINTMENTS and GROUPS THEM BY DOCTOR.
+    @app.route('/appointments', methods=['GET'])
+    def get_appointments():
+        appointments = Appointment.query.all()
+
+        # Empty dictionary to hold appointments grouped by doctor
+        grouped = {}
+
+        # Iterate through each appointment
+        for appointment in appointments:
+            doctor_id = appointment.doctor_id
+            doctor_name = appointment.doctor.name   #Backref
+
+            if doctor_id not in grouped:
+                grouped[doctor_id] = {
+                    'doctor_name': doctor_name,
+                    'appointments': []
+                }
+
+            # Append to the doctor's list
+            grouped[doctor_id]['appointments'].append(appointment.format())
+
+        # Convert dict into a list for easier JSON serialization
+        result = list(grouped.values())
+
+        return jsonify({
+            'success': True,
+            'appointments_by_doctor': result
+        })
+    
+    #  GET /appointments/doctor/<doctor_id>
+    #  Description: Retrieves all appointments related to a specific doctor by ID.
+    @app.route('/appointments/doctor/<int:doctor_id>', methods=['GET'])
+    def get_appointments_by_doctor(doctor_id):
+        appointments = Appointment.query.filter_by(doctor_id=doctor_id).all()
+        result = [appointment.format() for appointment in appointments]
+        return jsonify({
+            'success': True,
+            'appointments': result
+        })
+    
+    @app.route('/appointments', methods=['POST'])
+    def create_appointment():
+        body = request.get_json()
+        date_str = body.get('date', None)
+        status = body.get('status', None)
+        notes = body.get('notes', None)
+        doctor_id = body.get('doctor_id', None)
+        patient_id = body.get('patient_id', None)
+
+        if not date_str or not doctor_id or not patient_id:
+            abort(400)
+
+        try:
+            date = datetime.fromisoformat(date_str)
+            new_appointment = Appointment(
+                date=date,
+                status=status,
+                notes=notes,
+                doctor_id=doctor_id, 
+                patient_id=patient_id
+            )
+            new_appointment.insert()
+            return jsonify({
+                'success': True, 
+                'appointment': new_appointment.format()
+            })
+        except:
+            db.session.rollback()
+            abort(422)
+
+    @app.route('/appointments/<int:appointment_id>', methods=['PATCH'])
+    def update_appointments(appointment_id):
+        appointment = Appointment.query.get(appointment_id)
+        if not appointment:
+            abort(404)
+
+        body = request.get_json()
+        date_str = body.get('date', None)
+        status = body.get('status', None)
+        notes = body.get('notes', None)
+
+        if date_str:
+            try:
+                appointment.date = datetime.fromisoformat(date_str)
+            except:
+                abort(400)
+        if status:
+            appointment.status = status
+        if notes:
+            appointment.notes = notes
+
+        try:
+            appointment.update()
+            return jsonify({
+                'success': True,
+                'appointment': appointment.format()
+            })
+        except:
+            db.session.rollback()
+            abort(422)
+
+    @app.route('/appointments/<int:appointment_id>', methods=['DELETE'])
+    def delete_appointment(appointment_id):
+        appointment = Appointment.query.get(appointment_id)
+        if not appointment:
+            abort(404)
+
+        try:
+            appointment.delete()
+            return jsonify({
+                'success': True,
+                'deleted': appointment_id
             })
         except:
             db.session.rollback()
