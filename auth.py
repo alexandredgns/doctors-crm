@@ -7,7 +7,7 @@ from urllib.request import urlopen
 
 AUTH0_DOMAIN = 'udacity-alexandredgns.us.auth0.com'
 ALGORITHMS = ['RS256']
-API_AUDIENCE = ''
+API_AUDIENCE = 'doctors-crm'
 
 ## AuthError Exception
 '''

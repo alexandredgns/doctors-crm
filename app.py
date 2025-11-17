@@ -52,6 +52,7 @@ def create_app(test_config=None):
         })
     
     @app.route('/doctors', methods=['POST'])
+    @requires_auth("post:doctors")
     def create_doctor():
         body = request.get_json()
         name = body.get('name', None)
@@ -79,6 +80,7 @@ def create_app(test_config=None):
             abort(422)
     
     @app.route('/doctors/<int:doctor_id>', methods=['PATCH'])
+    @requires_auth("patch:doctors")
     def update_doctor(doctor_id):
         doctor = Doctor.query.get(doctor_id)
         if not doctor:
@@ -110,6 +112,7 @@ def create_app(test_config=None):
             abort(422)
 
     @app.route('/doctors/<int:doctor_id>', methods=['DELETE'])
+    @requires_auth("delete:doctors")
     def delete_doctor(doctor_id):
         doctor = Doctor.query.get(doctor_id)
         if not doctor:
@@ -129,6 +132,7 @@ def create_app(test_config=None):
     # 2. PATIENT
     # ======================================
     @app.route('/patients', methods=['GET'])
+    @requires_auth("get:patients")
     def get_patients():
         selection = Patient.query.all()
         patients = [patient.format() for patient in selection]
@@ -138,6 +142,7 @@ def create_app(test_config=None):
         })
     
     @app.route('/patients', methods=['POST'])
+    @requires_auth("post:patients")
     def create_patient():
         body = request.get_json()
         name = body.get('name', None)
@@ -165,6 +170,7 @@ def create_app(test_config=None):
             abort(422)
 
     @app.route('/patients/<int:patient_id>', methods=['PATCH'])
+    @requires_auth("patch:patients")
     def update_patient(patient_id):
         patient = Patient.query.get(patient_id)
         if not patient:
@@ -196,6 +202,7 @@ def create_app(test_config=None):
             abort(422)
 
     @app.route('/patients/<int:patient_id>', methods=['DELETE'])
+    @requires_auth("delete:patients")
     def delete_patient(patient_id):
         patient = Patient.query.get(patient_id)
         if not patient:
@@ -217,6 +224,7 @@ def create_app(test_config=None):
 
     #  GET /appointments
     @app.route('/appointments', methods=['GET'])
+    @requires_auth("get:appointments")
     def get_appointments():
         selection = Appointment.query.all()
         appointments = [appointment.format() for appointment in selection]
@@ -228,6 +236,7 @@ def create_app(test_config=None):
     #  GET /appointments/doctor/<doctor_id>
     #  Description: Retrieves all appointments related to a specific doctor by ID.
     @app.route('/appointments/doctor/<int:doctor_id>', methods=['GET'])
+    @requires_auth("get:appointments-doctor")
     def get_appointments_by_doctor(doctor_id):
         appointments = Appointment.query.filter_by(doctor_id=doctor_id).all()
         result = [appointment.format() for appointment in appointments]
@@ -237,6 +246,7 @@ def create_app(test_config=None):
         })
     
     @app.route('/appointments', methods=['POST'])
+    @requires_auth("post:appointments")
     def create_appointment():
         body = request.get_json()
         date_str = body.get('date', None)
@@ -267,6 +277,7 @@ def create_app(test_config=None):
             abort(422)
 
     @app.route('/appointments/<int:appointment_id>', methods=['PATCH'])
+    @requires_auth("patch:appointments")
     def update_appointments(appointment_id):
         appointment = Appointment.query.get(appointment_id)
         if not appointment:
@@ -298,6 +309,7 @@ def create_app(test_config=None):
             abort(422)
 
     @app.route('/appointments/<int:appointment_id>', methods=['DELETE'])
+    @requires_auth("delete:appointments")
     def delete_appointment(appointment_id):
         appointment = Appointment.query.get(appointment_id)
         if not appointment:
