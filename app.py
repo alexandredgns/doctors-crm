@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from models import setup_db, db, Doctor, Patient, Appointment
 from datetime import datetime, timezone
+from auth import requires_auth, AuthError
 
 
 def create_app(test_config=None):
@@ -215,34 +216,13 @@ def create_app(test_config=None):
     # ======================================
 
     #  GET /appointments
-    #  Description: Retrieves all APPOINTMENTS and GROUPS THEM BY DOCTOR.
     @app.route('/appointments', methods=['GET'])
     def get_appointments():
-        appointments = Appointment.query.all()
-
-        # Empty dictionary to hold appointments grouped by doctor
-        grouped = {}
-
-        # Iterate through each appointment
-        for appointment in appointments:
-            doctor_id = appointment.doctor_id
-            doctor_name = appointment.doctor.name   #Backref
-
-            if doctor_id not in grouped:
-                grouped[doctor_id] = {
-                    'doctor_name': doctor_name,
-                    'appointments': []
-                }
-
-            # Append to the doctor's list
-            grouped[doctor_id]['appointments'].append(appointment.format())
-
-        # Convert dict into a list for easier JSON serialization
-        result = list(grouped.values())
-
+        selection = Appointment.query.all()
+        appointments = [appointment.format() for appointment in selection]
         return jsonify({
             'success': True,
-            'appointments_by_doctor': result
+            'appointments': appointments
         })
     
     #  GET /appointments/doctor/<doctor_id>
@@ -337,6 +317,12 @@ def create_app(test_config=None):
     # ======================================
     #  ERROR HANDLERS
     # ======================================
+    @app.errorhandler(AuthError)
+    def handle_auth_error(ex):
+        response = jsonify(ex.error)
+        response.status_code = ex.status_code
+        return response
+    
     @app.errorhandler(400)
     def bad_request(error):
         return jsonify({
@@ -352,14 +338,6 @@ def create_app(test_config=None):
             'error': 404,
             'message': 'resource not found'
         }), 404
-
-    @app.errorhandler(405)
-    def bad_request(error):
-        return jsonify({
-            'success': False,
-            'error': 405,
-            'message': 'method not allowed'
-        }), 405
 
     @app.errorhandler(422)
     def bad_request(error):

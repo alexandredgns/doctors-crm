@@ -19,9 +19,9 @@ class AuthError(Exception):
         self.error = error
         self.status_code = status_code
 
-## =================================
-## Authorizing Header
-## =================================
+## ========================================
+## 1) VALIDATING REQUEST HEADER FORMAT
+## ========================================
 '''
     Attempt to get the header from the request,
         raise an AuthError if no header is present,
@@ -54,37 +54,9 @@ def get_token_auth_header():
     return header_parts[1]
 
 
-## =================================
-## Checking Permissions
-## =================================
-'''
-    @INPUTS
-        permission: string permission (i.e. 'post:drink')
-        payload: decoded jwt payload
-
-    Raise an AuthError if permissions are not included in the payload,
-    Raise an AuthError if the requested permission string is not in the payload permissions array,
-    Return true otherwise
-'''
-def check_permissions(permission, payload):
-    if 'permissions' not in payload:
-        raise AuthError({
-            'code': 'invalid_claims',
-            'description': 'Permissions not included'
-        }, 401)
-    
-    if permission not in payload['permissions']:
-        raise AuthError({
-            'code': 'unauthorized',
-            'description': 'Permission not found'
-        }, 403)
-    
-    return True
-
-
-## =================================
-## Verify JWT and Decode Payload
-## =================================
+## ========================================
+## 2) VALIDATING AUTH0 TOKEN
+## ========================================
 '''
     @INPUTS
         token: a json web token (string)
@@ -154,15 +126,44 @@ def verify_decode_jwt(token):
         'description': 'Unable to find the appropriate key.'
     }, 400)
 
+
+## ========================================
+## 3) CHECKING USER PERMISSIONS
+## ========================================
 '''
-@TODO implement @requires_auth(permission) decorator method
     @INPUTS
         permission: string permission (i.e. 'post:drink')
+        payload: decoded jwt payload
 
-    it should use the get_token_auth_header method to get the token
-    it should use the verify_decode_jwt method to decode the jwt
-    it should use the check_permissions method validate claims and check the requested permission
-    return the decorator which passes the decoded payload to the decorated method
+    Raise an AuthError if permissions are not included in the payload,
+    Raise an AuthError if the requested permission string is not in the payload permissions array,
+    Return true otherwise
+'''
+def check_permissions(permission, payload):
+    if 'permissions' not in payload:
+        raise AuthError({
+            'code': 'invalid_claims',
+            'description': 'Permissions not included'
+        }, 401)
+    
+    if permission not in payload['permissions']:
+        raise AuthError({
+            'code': 'unauthorized',
+            'description': 'Permission not found'
+        }, 403)
+    
+    return True
+
+
+
+## ========================================
+## 4) AUTH DECORATOR
+## ========================================
+'''
+    Use the get_token_auth_header method to get the token,
+    Use the verify_decode_jwt method to decode the jwt,
+    Use the check_permissions method validate claims and check the requested permission,
+    Return the decorator which passes the decoded payload to the decorated method
 '''
 def requires_auth(permission=''):
     def requires_auth_decorator(f):
