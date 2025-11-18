@@ -137,7 +137,7 @@ def create_app(test_config=None):
         medical_history = body.get('medical_history', None)
 
         if not name:
-            abort(404)
+            abort(400)
 
         try:
             new_patient = Patient(
