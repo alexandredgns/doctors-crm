@@ -1,13 +1,14 @@
 import json
+import os
 from flask import request
 from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
 
 
-AUTH0_DOMAIN = 'udacity-alexandredgns.us.auth0.com'
+AUTH0_DOMAIN = os.environ.get('AUTH0_DOMAIN')
 ALGORITHMS = ['RS256']
-API_AUDIENCE = 'doctors-crm'
+API_AUDIENCE = os.environ.get('AUTH0_API_AUDIENCE')
 
 ## AuthError Exception
 '''

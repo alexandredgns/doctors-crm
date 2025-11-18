@@ -1,13 +1,10 @@
+import os
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, String, Integer, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 
-database_name = 'doctors_crm'
-database_user = 'postgres'
-database_password = 'Dev26776'          # CREATE ENV VARIABLE
-database_host = 'localhost:5432'
-database_path = f'postgresql://{database_user}:{database_password}@{database_host}/{database_name}'
+database_path = os.environ['DATABASE_URL']
 
 db = SQLAlchemy()
 
