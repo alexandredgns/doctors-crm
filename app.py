@@ -17,6 +17,7 @@ def create_app(test_config=None):
         setup_db(app, database_path=database_path)
 
     CORS(app)
+    migrate = Migrate(app, db)
 
     with app.app_context():
         db.create_all()
