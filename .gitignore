@@ -8,13 +8,4 @@ __pycache__/
 *.pyo
 *.pyd
 
-.idea/
-.vscode/
-*.sublime-project
-*.sublime-workspace
-
-logs/
-*.log
-
 .DS_Store
-Thumbs.db
