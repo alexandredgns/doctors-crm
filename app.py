@@ -16,24 +16,10 @@ def create_app(test_config=None):
         database_path = test_config.get('SQLALCHEMY_DATABASE_URI')
         setup_db(app, database_path=database_path)
 
+    CORS(app)
     migrate = Migrate(app, db)
     with app.app_context():
         db.create_all()
-
-    cors = CORS(app, resources={r"/*": {"origins": "*"}})
-
-    @app.after_request
-    def after_request(response):
-        if not response.headers.get('Access-Control-Allow-Origin'):
-            response.headers.add('Access-Control-Allow-Origin', '*')  
-    
-        if not response.headers.get('Access-Control-Allow-Headers'):
-            response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,true')
-    
-        if not response.headers.get('Access-Control-Allow-Methods'):
-            response.headers.add('Access-Control-Allow-Methods', 'GET,PATCH,POST,DELETE,OPTIONS')
-
-        return response
 
 
     # ======================================
@@ -53,7 +39,7 @@ def create_app(test_config=None):
     
     @app.route('/doctors', methods=['POST'])
     @requires_auth("post:doctors")
-    def create_doctor():
+    def create_doctor(payload):
         body = request.get_json()
         name = body.get('name', None)
         speciality = body.get('speciality', None)
@@ -81,7 +67,7 @@ def create_app(test_config=None):
     
     @app.route('/doctors/<int:doctor_id>', methods=['PATCH'])
     @requires_auth("patch:doctors")
-    def update_doctor(doctor_id):
+    def update_doctor(payload, doctor_id):
         doctor = Doctor.query.get(doctor_id)
         if not doctor:
             abort(404)
@@ -113,7 +99,7 @@ def create_app(test_config=None):
 
     @app.route('/doctors/<int:doctor_id>', methods=['DELETE'])
     @requires_auth("delete:doctors")
-    def delete_doctor(doctor_id):
+    def delete_doctor(payload, doctor_id):
         doctor = Doctor.query.get(doctor_id)
         if not doctor:
             abort(404)
@@ -133,7 +119,7 @@ def create_app(test_config=None):
     # ======================================
     @app.route('/patients', methods=['GET'])
     @requires_auth("get:patients")
-    def get_patients():
+    def get_patients(payload):
         selection = Patient.query.all()
         patients = [patient.format() for patient in selection]
         return jsonify({
@@ -143,7 +129,7 @@ def create_app(test_config=None):
     
     @app.route('/patients', methods=['POST'])
     @requires_auth("post:patients")
-    def create_patient():
+    def create_patient(payload):
         body = request.get_json()
         name = body.get('name', None)
         phone = body.get('phone', None)
@@ -171,7 +157,7 @@ def create_app(test_config=None):
 
     @app.route('/patients/<int:patient_id>', methods=['PATCH'])
     @requires_auth("patch:patients")
-    def update_patient(patient_id):
+    def update_patient(payload, patient_id):
         patient = Patient.query.get(patient_id)
         if not patient:
             abort(404)
@@ -203,7 +189,7 @@ def create_app(test_config=None):
 
     @app.route('/patients/<int:patient_id>', methods=['DELETE'])
     @requires_auth("delete:patients")
-    def delete_patient(patient_id):
+    def delete_patient(payload, patient_id):
         patient = Patient.query.get(patient_id)
         if not patient:
             abort(404)
@@ -225,7 +211,7 @@ def create_app(test_config=None):
     #  GET /appointments
     @app.route('/appointments', methods=['GET'])
     @requires_auth("get:appointments")
-    def get_appointments():
+    def get_appointments(payload):
         selection = Appointment.query.all()
         appointments = [appointment.format() for appointment in selection]
         return jsonify({
@@ -237,7 +223,7 @@ def create_app(test_config=None):
     #  Description: Retrieves all appointments related to a specific doctor by ID.
     @app.route('/appointments/doctor/<int:doctor_id>', methods=['GET'])
     @requires_auth("get:appointments-doctor")
-    def get_appointments_by_doctor(doctor_id):
+    def get_appointments_by_doctor(payload, doctor_id):
         appointments = Appointment.query.filter_by(doctor_id=doctor_id).all()
         result = [appointment.format() for appointment in appointments]
         return jsonify({
@@ -247,7 +233,7 @@ def create_app(test_config=None):
     
     @app.route('/appointments', methods=['POST'])
     @requires_auth("post:appointments")
-    def create_appointment():
+    def create_appointment(payload):
         body = request.get_json()
         date_str = body.get('date', None)
         status = body.get('status', None)
@@ -278,7 +264,7 @@ def create_app(test_config=None):
 
     @app.route('/appointments/<int:appointment_id>', methods=['PATCH'])
     @requires_auth("patch:appointments")
-    def update_appointments(appointment_id):
+    def update_appointments(payload, appointment_id):
         appointment = Appointment.query.get(appointment_id)
         if not appointment:
             abort(404)
@@ -310,7 +296,7 @@ def create_app(test_config=None):
 
     @app.route('/appointments/<int:appointment_id>', methods=['DELETE'])
     @requires_auth("delete:appointments")
-    def delete_appointment(appointment_id):
+    def delete_appointment(payload, appointment_id):
         appointment = Appointment.query.get(appointment_id)
         if not appointment:
             abort(404)
